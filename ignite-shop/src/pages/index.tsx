@@ -1,26 +1,52 @@
 import Image from 'next/image';
-import { HomeContainer, Product } from '../Styles/Pages/Home';
-import shirt1 from '../assets/shirt1.png';
-import shirt2 from '../assets/shirt2.png';
-import shirt3 from '../assets/shirt3.png';
+import { GetStaticProps } from 'next';
 
-export default function Home() {
+import { getProducts } from '../Services/http/gets/getProducts';
+import { ProductsProps } from '../interfaces/product';
+
+import { useKeenSlider } from 'keen-slider/react';
+import 'keen-slider/keen-slider.min.css';
+
+import { HomeContainer, Product } from '../Styles/Pages/Home';
+import Link from 'next/link';
+
+export default function Home({ products }: ProductsProps) {
+  const [keenRef] = useKeenSlider({
+    slides: {
+      perView: 3,
+      spacing: 48,
+    },
+  });
+
   return (
-    <HomeContainer>
-      <Product>
-        <Image src={shirt1} width={520} height={480} alt={''} />
-        <footer>
-          <strong>Shirt X</strong>
-          <span>79.90€</span>
-        </footer>
-      </Product>
-      <Product>
-        <Image src={shirt2} width={520} height={480} alt={''} />
-        <footer>
-          <strong>Shirt S</strong>
-          <span>79.90€</span>
-        </footer>
-      </Product>
+    <HomeContainer ref={keenRef} className='keen-slider'>
+      {products.map((product) => {
+        return (
+          <Link
+            href={`/product/${product.id}`}
+            key={product.id}
+            prefetch={false}
+          >
+            <Product className='keen-slider__slide'>
+              <Image src={product.imageUrl} width={520} height={480} alt={''} />
+              <footer>
+                <strong>{product.name}</strong>
+                <span>{product.price}</span>
+              </footer>
+            </Product>
+          </Link>
+        );
+      })}
     </HomeContainer>
   );
 }
+
+export const getStaticProps: GetStaticProps = async () => {
+  const products = await getProducts();
+  return {
+    props: {
+      products: products,
+    },
+    revalidate: 300,
+  };
+};
