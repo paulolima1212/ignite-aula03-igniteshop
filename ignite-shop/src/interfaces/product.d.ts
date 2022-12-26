@@ -13,4 +13,5 @@ export interface ProductProps {
   price: number;
   imageUrl: string;
   description: string;
+  priceId: string;
 }

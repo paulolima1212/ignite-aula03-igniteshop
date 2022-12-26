@@ -9,12 +9,31 @@ import { GetStaticPaths, GetStaticProps } from 'next';
 import { getProduct } from '../../Services/http/gets/getProduct';
 import { ProductProps } from '../../interfaces/product';
 import { useRouter } from 'next/router';
+import { api } from '../../Libs/axios';
+import { useState } from 'react';
 
 export default function Product({ product }: { product: ProductProps }) {
   const { isFallback } = useRouter();
+  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] =
+    useState(false);
 
   if (isFallback) {
     return <p>Loading...</p>;
+  }
+
+  async function handleBuyProduct() {
+    try {
+      setIsCreatingCheckoutSession(true);
+      const response = await api.post('/', {
+        priceId: product.priceId,
+      });
+
+      const { checkoutUrl } = response.data;
+      window.location.href = checkoutUrl;
+    } catch (error) {
+      setIsCreatingCheckoutSession(false);
+      alert(error);
+    }
   }
 
   return (
@@ -26,7 +45,9 @@ export default function Product({ product }: { product: ProductProps }) {
         <h1>{product?.name}</h1>
         <span>{product?.price}</span>
         <p>{product?.description}</p>
-        <button>Buy</button>
+        <button disabled={isCreatingCheckoutSession} onClick={handleBuyProduct}>
+          Buy
+        </button>
       </ProductDetailsContainer>
     </ProductContainer>
   );
